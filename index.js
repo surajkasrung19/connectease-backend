@@ -26,7 +26,7 @@ app.use(cors({
     "http://localhost:5173",
     "https://connectease-frontend.vercel.app",
   ],
-  credentials: true,   
+  credentials: true,
 }));
 app.use(express.json());
 
