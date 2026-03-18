@@ -1,22 +1,44 @@
-//server/utils/sendEmail.js
-const nodemailer = require("nodemailer");
+// server/utils/sendEmail.js
+const https = require("https");
 
 const sendEmail = async ({ to, subject, html }) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp-relay.brevo.com",
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+  const data = JSON.stringify({
+    sender: {
+      name: "ConnectEase",
+      email: process.env.EMAIL_USER,
     },
+    to: [{ email: to }],
+    subject,
+    htmlContent: html,
   });
 
-  await transporter.sendMail({
-    from: `"ConnectEase" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: "api.brevo.com",
+      path: "/v3/smtp/email",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+        "Content-Length": Buffer.byteLength(data),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let body = "";
+      res.on("data", (chunk) => (body += chunk));
+      res.on("end", () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(body);
+        } else {
+          reject(new Error(`Brevo API error: ${res.statusCode} - ${body}`));
+        }
+      });
+    });
+
+    req.on("error", reject);
+    req.write(data);
+    req.end();
   });
 };
 
