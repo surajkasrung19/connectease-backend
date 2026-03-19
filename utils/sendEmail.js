@@ -10,6 +10,8 @@ const sendEmail = async ({ to, subject, html }) => {
     to: [{ email: to }],
     subject,
     htmlContent: html,
+    trackClicks: false,
+    trackOpens: false,
   });
 
   return new Promise((resolve, reject) => {
